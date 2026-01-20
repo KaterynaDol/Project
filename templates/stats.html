@@ -1,23 +1,39 @@
 <!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Stats</title></head>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Statistics</title>
+</head>
 <body>
-    <h1>Statistics</h1>
 
-    <h2>Top 5 by frequency</h2>
-    <ul>
-        {% for r in top5 %}
-            <li>{{ r.count }}x | {{ r.search_type }} | {{ r.params }} | rows={{ r.results_count }} | {{ r.timestamp }}</li>
-        {% endfor %}
-    </ul>
+<h1>Statistics</h1>
 
-    <h2>Last 5 unique</h2>
-    <ul>
-        {% for r in last5 %}
-            <li>{{ r.search_type }} | {{ r.params }} | rows={{ r.results_count }} | {{ r.timestamp }}</li>
-        {% endfor %}
-    </ul>
+<h2>Top 5 by frequency</h2>
+<ul>
+    {% for r in top5 %}
+        <li>
+            {{ r.count }}x |
+            {{ r.search_type }} |
+            {{ r.params_str }} |
+            rows={{ r.results_count }} |
+            {{ r.timestamp }}
+        </li>
+    {% endfor %}
+</ul>
 
-    <p><a href="/">Back</a></p>
+<h2>Last 5 unique</h2>
+<ul>
+    {% for r in last5 %}
+        <li>
+            {{ r.search_type }} |
+            {{ r.params_str }} |
+            rows={{ r.results_count }} |
+            {{ r.timestamp }}
+        </li>
+    {% endfor %}
+</ul>
+
+<p><a href="/">Back</a></p>
+
 </body>
 </html>

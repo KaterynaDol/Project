@@ -27,3 +27,13 @@ AND f.release_year BETWEEN %s AND %s
 ORDER BY f.release_year, f.title
 LIMIT %s OFFSET %s;
 """
+
+SEARCH_BY_YEARS_ALL_GENRES = """
+SELECT f.film_id, f.title, f.release_year, c.name AS genre
+FROM film f
+JOIN film_category fc ON fc.film_id = f.film_id
+JOIN category c ON c.category_id = fc.category_id
+WHERE f.release_year BETWEEN %s AND %s
+ORDER BY f.release_year, f.title
+LIMIT %s OFFSET %s;
+"""

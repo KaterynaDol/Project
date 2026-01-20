@@ -62,7 +62,7 @@ def get_min_max_year():
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    genres = get_genres()
+    genres = ["All"] + get_genres()
     min_y, max_y = get_min_max_year()
     return templates.TemplateResponse(
         "index.html",
@@ -117,10 +117,16 @@ def search_genre(
     if genre and year_from and year_to:
         with get_mysql_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute(
-                    queries.SEARCH_BY_GENRE_YEARS,
-            (genre, year_from, year_to, PAGE_SIZE, offset),
-                )
+                if genre == "All":
+                    cursor.execute(
+                        queries.SEARCH_BY_YEARS_ALL_GENRES,
+                        (year_from, year_to, PAGE_SIZE, offset),
+                    )
+                else:
+                    cursor.execute(
+                        queries.SEARCH_BY_GENRE_YEARS,
+                (genre, year_from, year_to, PAGE_SIZE, offset),
+                    )
                 rows = fetch_all(cursor)
 
         log_query(
