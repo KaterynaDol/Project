@@ -1,0 +1,15 @@
+# secrets
+local_settings.py
+*.env
+
+# python cache
+__pycache__/
+*.pyc
+
+# virtual environment
+.venv/
+venv/
+
+# IDE / OS
+.idea/
+.DS_Store

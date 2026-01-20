@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Movies Search</title></head>
+<body>
+    <h1>Movies Search (Sakila)</h1>
+
+    <h2>Search by keyword</h2>
+    <form action="/search/keyword" method="get">
+    <input name="keyword" placeholder="academy" required>
+    <button type="submit">Search</button>
+    </form>
+
+    <h2>Search by genre & years</h2>
+    <p>Years in DB: {{ min_y }} - {{ max_y }}</p>
+
+    <form action="/search/genre" method="get">
+        <select name="genre" required>
+            {% for g in genres %}
+                <option value="{{ g }}">{{ g }}</option>
+            {% endfor %}
+        </select>
+
+        <input name="year_from" type="number" min="{{ min_y }}" max="{{ max_y }}" value="{{ min_y }}" required>
+        <input name="year_to" type="number" min="{{ min_y }}" max="{{ max_y }}" value="{{ max_y }}" required>
+
+        <button type="submit">Search</button>
+    </form>
+
+    <p><a href="/stats">View statistics</a></p>
+</body>
+</html>

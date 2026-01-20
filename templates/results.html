@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Results</title></head>
+<body>
+    <h1>{{ title }}</h1>
+
+    {% if rows %}
+        <ul>
+            {% for r in rows %}
+                <li>{{ r.title }} ({{ r.release_year }}){% if r.genre %} | {{ r.genre }}{% endif %}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results</p>
+    {% endif %}
+
+    {% if has_more %}
+        <p><a href="{{ next_url }}">Next 10</a></p>
+    {% endif %}
+
+    <p><a href="{{ back_url }}">Back</a></p>
+</body>
+</html>
