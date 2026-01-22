@@ -160,47 +160,6 @@ def stats(request: Request):
     top5 = stats_top5_frequency()
     last5 = stats_last5_unique()
 
-    # col = get_mongo_collection()
-    #
-    # top5 = list(
-    #     col.aggregate(
-    #         [
-    #             {"$addFields": {"key": {"$concat": ["$search_type", " | ", {"$toString": "$params"}]}}},
-    #             {
-    #                 "$group": {
-    #                     "_id": "$key",
-    #                     "count": {"$sum": 1},
-    #                     "search_type": {"$first": "$search_type"},
-    #                     "params": {"$first": "$params"},
-    #                     "results_count": {"$first": "$results_count"},
-    #                     "timestamp": {"$max": "$timestamp"},
-    #                 }
-    #             },
-    #             {"$sort": {"count": -1, "timestamp": -1}},
-    #             {"$limit": 5},
-    #         ]
-    #     )
-    # )
-    #
-    # last5 = list(
-    #     col.aggregate(
-    #         [
-    #             {"$sort": {"timestamp": -1}},
-    #             {"$addFields": {"key": {"$concat": ["$search_type", " | ", {"$toString": "$params"}]}}},
-    #             {
-    #                 "$group": {
-    #                     "_id": "$key",
-    #                     "search_type": {"$first": "$search_type"},
-    #                     "params": {"$first": "$params"},
-    #                     "results_count": {"$first": "$results_count"},
-    #                     "timestamp": {"$first": "$timestamp"},
-    #                 }
-    #             },
-    #             {"$sort": {"timestamp": -1}},
-    #             {"$limit": 5},
-    #         ]
-    #     )
-    # )
 
     return templates.TemplateResponse(
         "stats.html",
