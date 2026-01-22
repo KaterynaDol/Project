@@ -1,21 +1,23 @@
 from datetime import datetime, timezone
+from pathlib import Path
 
 import mysql.connector
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from mongo import stats_top5_frequency, stats_last5_unique
+from Project.mongo import stats_top5_frequency, stats_last5_unique
 from pymongo import MongoClient
 
 
-import queries
-from local_settings import dbconfig, MONGODB_URL_EDIT
+from Project import queries
+from Project.local_settings import dbconfig, MONGODB_URL_EDIT
 
 PAGE_SIZE = 10
 
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / 'templates'))
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
 
 
 def get_mysql_connection():
@@ -30,14 +32,14 @@ def get_mongo_collection():
 
 def log_query(search_type: str, params: dict, results_count: int) -> None:
     col = get_mongo_collection()
-    col.insert_one(
-        {
+    doc = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "search_type": search_type,
         "params": params,
         "results_count": results_count,
         }
-    )
+    res = col.insert_one(doc)
+    print("Mongo inserted:", res.inserted_id, doc)
 
 
 def fetch_all(cursor):

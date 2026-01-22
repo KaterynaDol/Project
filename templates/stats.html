@@ -3,6 +3,24 @@
 <head>
     <meta charset="utf-8">
     <title>Statistics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 14px;
+        }
+        .meta {
+            color: #555;
+            font-size: 0.9em;
+        }
+        h1, h2 {
+            margin-top: 24px;
+        }
+    </style>
 </head>
 <body>
 
@@ -11,12 +29,26 @@
 <h2>Top 5 by frequency</h2>
 <ul>
     {% for r in top5 %}
+        {% set p = r.get('params', {}) %}
         <li>
-            {{ r.count }}x |
-            {{ r.search_type }} |
-            {{ r.params_str }} |
-            rows={{ r.results_count }} |
-            {{ r.timestamp }}
+            <b>{{ r.count }}x</b> — <b>{{ r.search_type }}</b><br>
+
+            {% if p.get('keyword') %}
+                keyword: <b>{{ p.get('keyword') }}</b><br>
+            {% endif %}
+
+            {% if p.get('genre') %}
+                genre: <b>{{ p.get('genre') }}</b><br>
+            {% endif %}
+
+            {% if p.get('years_range') %}
+                years: <b>{{ p.get('years_range') }}</b><br>
+            {% endif %}
+
+            rows: <b>{{ r.results_count }}</b><br>
+            <span class="meta">
+                {{ r.timestamp[:16].replace('T', ' ') }}
+            </span>
         </li>
     {% endfor %}
 </ul>
@@ -24,11 +56,26 @@
 <h2>Last 5 unique</h2>
 <ul>
     {% for r in last5 %}
+        {% set p = r.get('params', {}) %}
         <li>
-            {{ r.search_type }} |
-            {{ r.params_str }} |
-            rows={{ r.results_count }} |
-            {{ r.timestamp }}
+            <b>{{ r.search_type }}</b><br>
+
+            {% if p.get('keyword') %}
+                keyword: <b>{{ p.get('keyword') }}</b><br>
+            {% endif %}
+
+            {% if p.get('genre') %}
+                genre: <b>{{ p.get('genre') }}</b><br>
+            {% endif %}
+
+            {% if p.get('years_range') %}
+                years: <b>{{ p.get('years_range') }}</b><br>
+            {% endif %}
+
+            rows: <b>{{ r.results_count }}</b><br>
+            <span class="meta">
+                {{ r.timestamp[:16].replace('T', ' ') }}
+            </span>
         </li>
     {% endfor %}
 </ul>

@@ -1,15 +1,16 @@
 # mysql_repo.py
 """
 MySQL repository.
-Здесь ТОЛЬКО работа с MySQL:
-- подключение
-- запросы
-- преобразование данных
+Модуль отвечает ТОЛЬКО за работу с MySQL:
+- подключение к базе
+- выполнение SQL-запросов
+- преобразование результатов в удобный формат
 """
 
 import mysql.connector
-import queries
-from local_settings import dbconfig
+
+from Project import queries
+from Project.local_settings import dbconfig
 
 
 def get_mysql_connection():
@@ -18,9 +19,10 @@ def get_mysql_connection():
 
 
 def fetch_all(cursor) -> list[dict]:
-
-
-    """Преобразует cursor.fetchall() в список словарей."""
+    """
+    Преобразует результат cursor.fetchall() в список словарей.
+    Ключи словаря - названия колонок.
+    """
     cols = [d[0] for d in cursor.description]
     return [dict(zip(cols, row)) for row in cursor.fetchall()]
 
@@ -63,4 +65,4 @@ def search_by_genre_years(
                 queries.SEARCH_BY_GENRE_YEARS,
         (genre, year_from, year_to, limit, offset),
             )
-        return fetch_all(cursor)
+            return fetch_all(cursor)
