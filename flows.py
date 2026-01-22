@@ -1,7 +1,5 @@
-
+# flows.py
 """
-#flows.py
-
 Сценарии (flows) пользовательских действий для CLI (консольной версии).
 Модуль содержит бизнес-логику приложения.
 
@@ -11,7 +9,6 @@
 - просмотр статистики запросов
 """
 
-from typing import List, Dict
 
 from Project import queries
 from Project.mysql_repo import (
@@ -23,10 +20,8 @@ from Project.mysql_repo import (
 from Project.mongo import (
     stats_top5_frequency,
     stats_last5_unique,
+    log_query
 )
-
-from Project.web_app import (log_query)
-
 
 # Количество фильмов на страницу (pagination)
 PAGE_SIZE = 10
@@ -34,7 +29,7 @@ PAGE_SIZE = 10
 
 # ====== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ======
 
-def print_movies(rows: List[Dict]) -> None:
+def print_movies(rows: list[dict]) -> None:
     """
     Печатает список фильмов в читаемом виде.
     """
@@ -47,16 +42,14 @@ def print_movies(rows: List[Dict]) -> None:
         year = r.get("release_year")
         genre = r.get("genre")
 
-    if genre:
-        print(f"{title} ({year}) | {genre}")
-    else:
-        print(f"{title} ({year})")
+        if genre:
+            print(f"{title} ({year}) | {genre}")
+        else:
+            print(f"{title} ({year})")
 
 
 def ask_show_more() -> bool:
-    """
-    Спрашивает пользователя, показывать ли следующую страницу.
-    """
+    """Спрашивает пользователя, показывать ли следующую страницу."""
     ans = input(f"Show next {PAGE_SIZE}? (y/n): ").strip().lower()
     return ans in {"y", "yes", "да", "д"}
 
@@ -64,6 +57,7 @@ def ask_show_more() -> bool:
 def parse_years_range(raw: str, min_y: int, max_y: int) -> tuple[int, int]:
     """
     Парсит ввод года или диапазона лет.
+    Проверяет границы (min_y..max_y)
     """
     raw = raw.strip()
 
@@ -77,11 +71,11 @@ def parse_years_range(raw: str, min_y: int, max_y: int) -> tuple[int, int]:
             raise ValueError("Wrong format.")
         y1 = y2 = int(raw)
 
-    #Нормализуем порядок (если ввели наоборот)
+    # Нормализуем порядок (если ввели наоборот)
     if y1 > y2:
         y1, y2 = y2, y1
 
-    #Проверяем границы, чтобы пользователь не вводил год вне базы
+    # Проверяем границы, чтобы пользователь не вводил год вне базы
     if y1 < min_y or y2 > max_y:
         raise ValueError(f"Years must be within {min_y}-{max_y}")
 
@@ -89,23 +83,21 @@ def parse_years_range(raw: str, min_y: int, max_y: int) -> tuple[int, int]:
 
 
 def parse_years_input(min_y: int, max_y: int) -> tuple[int, int]:
-    raw = input("Enter year or range (e.g. 2005-2012): ")
+    raw = input("Enter year or range (e.g. 2005-2012): ").strip()
     return parse_years_range(raw, min_y, max_y)
 
 
 # ====== FLOW: ПОИСК ПО КЛЮЧЕВОМУ СЛОВУ ======
 
 def keyword_flow() -> None:
-    """
-    Сценарий поиска фильмов по ключевому слову.
-    """
+    """Сценарий поиска фильмов по ключевому слову."""
     keyword = input("Enter keyword: ").strip()
     if not keyword:
         print("Empty keyword. Back to menu.")
         return
 
     offset = 0
-    shown_count = 0 #сколько результатов реально показали пользователю за весь запрос
+    shown_count = 0  # сколько результатов реально показали пользователю за весь запрос
 
     while True:
         with get_mysql_connection() as conn:
@@ -119,26 +111,24 @@ def keyword_flow() -> None:
         print_movies(rows)
         shown_count += len(rows)
 
-        #Если пришло меньше PAGE_SIZE - больше результатов нет
+        # Если пришло меньше PAGE_SIZE - больше результатов нет
         if len(rows) < PAGE_SIZE:
             break
 
-        #Если пользователь не хочет дальше - заканчиваем
+        # Если пользователь не хочет дальше - заканчиваем
         if not ask_show_more():
             break
 
         offset += PAGE_SIZE
 
-    # логирование запроса в MongoDB
+    # Логирование запроса в MongoDB
     log_query("keyword", {"keyword": keyword}, shown_count)
 
 
 # ====== FLOW: ПОИСК ПО ЖАНРУ И ГОДАМ ======
 
 def genre_years_flow() -> None:
-    """
-    Сценарий поиска фильмов по жанру и диапазону лет.
-    """
+    """Сценарий поиска фильмов по жанру и диапазону лет."""
     genres = get_genres()
     min_y, max_y = get_min_max_year()
 
@@ -180,7 +170,7 @@ def genre_years_flow() -> None:
 
         offset += PAGE_SIZE
 
-    # логирование запроса в MongoDB
+    # Логирование запроса в MongoDB
     log_query(
         "genre__years_range",
         {"genre": genre, "years_range": f"{year_from}-{year_to}"},
@@ -191,9 +181,7 @@ def genre_years_flow() -> None:
 # ====== FLOW: СТАТИСТИКА ======
 
 def stats_flow() -> None:
-    """
-    Сценарий просмотра статистики запросов.
-    """
+    """Сценарий просмотра статистики запросов."""
     while True:
         print(
             """
@@ -209,19 +197,17 @@ def stats_flow() -> None:
             rows = stats_top5_frequency()
             for r in rows:
                 print(
-                    f"{r['count']}x | {r['search_type']} | {r.get['params']} "
-                    f"| rows={r.get['results_count']} | {r.get['timestamp']}"
+                    f"{r.get('count')}x | {r.get('search_type')} | {r.get('params')} "
+                    f"| rows={r.get('results_count')} | {r.get('timestamp')}"
                 )
 
         elif choice == "2":
             rows = stats_last5_unique()
             for r in rows:
                 print(
-                    f"{r['search_type']} | {r.get['params']} "
-                    f"| rows={r.get['results_count']} | {r.get['timestamp']}"
+                    f"{r.get('search_type')} | {r.get('params')} "
+                    f"| rows={r.get('results_count')} | {r.get('timestamp')}"
                 )
 
         elif choice == "0":
             return
-
-

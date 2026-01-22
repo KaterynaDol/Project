@@ -31,7 +31,7 @@
     {% for r in top5 %}
         {% set p = r.get('params', {}) %}
         <li>
-            <b>{{ r.count }}x</b> — <b>{{ r.search_type }}</b><br>
+            <b>{{ r.get('count', 0) }}x</b> — <b>{{ r.get('search_type', '') }}</b><br>
 
             {% if p.get('keyword') %}
                 keyword: <b>{{ p.get('keyword') }}</b><br>
@@ -45,9 +45,10 @@
                 years: <b>{{ p.get('years_range') }}</b><br>
             {% endif %}
 
-            rows: <b>{{ r.results_count }}</b><br>
+            rows: <b>{{ r.get('results_count', 0) }}</b><br>
+            {% set ts = r.get('timestamp', '') %}
             <span class="meta">
-                {{ r.timestamp[:16].replace('T', ' ') }}
+                {{ ts[:16].replace('T', ' ') }}
             </span>
         </li>
     {% endfor %}
@@ -58,7 +59,7 @@
     {% for r in last5 %}
         {% set p = r.get('params', {}) %}
         <li>
-            <b>{{ r.search_type }}</b><br>
+            <b>{{ r.get('search_type', '') }}</b><br>
 
             {% if p.get('keyword') %}
                 keyword: <b>{{ p.get('keyword') }}</b><br>
@@ -72,9 +73,10 @@
                 years: <b>{{ p.get('years_range') }}</b><br>
             {% endif %}
 
-            rows: <b>{{ r.results_count }}</b><br>
+            rows: <b>{{ r.get('results_count', 0) }}</b><br>
+            {% set ts = r.get('timestamp', '') %}
             <span class="meta">
-                {{ r.timestamp[:16].replace('T', ' ') }}
+                {{ ts[:16].replace('T', ' ') }}
             </span>
         </li>
     {% endfor %}

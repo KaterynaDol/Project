@@ -50,19 +50,23 @@ def search_by_keyword(keyword: str, limit: int, offset: int) -> list[dict]:
         with conn.cursor() as cursor:
             cursor.execute(
                 queries.SEARCH_BY_KEYWORD,
-        (f"%{keyword.lower()}%", limit, offset),
+                (f"%{keyword.lower()}%", limit, offset),
             )
             return fetch_all(cursor)
 
 
 def search_by_genre_years(
-        genre: str, year_from: int, year_to: int, limit: int, offset: int
+        genre: str,
+        year_from: int,
+        year_to: int,
+        limit: int,
+        offset: int
 ) -> list[dict]:
     """Поиск фильмов по жанру и диапазону лет."""
     with get_mysql_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(
                 queries.SEARCH_BY_GENRE_YEARS,
-        (genre, year_from, year_to, limit, offset),
+                (genre, year_from, year_to, limit, offset),
             )
             return fetch_all(cursor)

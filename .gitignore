@@ -1,15 +1,31 @@
-# secrets
+# --------------------
+# Secrets / config
+# --------------------
 local_settings.py
 *.env
 
-# python cache
+# --------------------
+# Python cache
+# --------------------
 __pycache__/
 *.pyc
 
-# virtual environment
+# --------------------
+# Virtual environment
+# --------------------
 .venv/
 venv/
 
+# --------------------
+# Tests / coverage
+# --------------------
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --------------------
 # IDE / OS
+# --------------------
 .idea/
+.vscode/
 .DS_Store

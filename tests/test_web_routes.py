@@ -1,3 +1,10 @@
+"""
+Интеграционные тесты FastAPI-роутов.
+Проверяют, что страницы приложения открываются и возвращают HTTP 200
+без обращения к реальным базам данных.
+"""
+
+
 from fastapi.testclient import TestClient
 from Project import web_app
 
