@@ -119,7 +119,7 @@
 ### Запуск веб-приложения
 
 ```bash
-python -m uvicorn web_app:app --reload --port 8000
+python -m uvicorn Project.web_app:app --reload 
 
 
 После запуска приложение доступно по адресу:
@@ -156,7 +156,7 @@ SQL-запросы
 
 MongoDB агрегации
 
-smoke-тесты веб-приложения
+тесты веб-приложения
 
 
 

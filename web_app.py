@@ -13,6 +13,7 @@ FastAPI web-приложение для поиска фильмов (MySQL) и �
 """
 
 from pathlib import Path
+import re
 
 import mysql.connector
 from fastapi import FastAPI, Request
@@ -95,6 +96,25 @@ def index(request: Request):
 def search_keyword(request: Request, keyword: str = "", page: int = 1):
     """Поиск по ключевому слову (title)."""
     keyword = keyword.strip()
+
+    # Валидация:
+    # Разрешаем логировать и обрабатывать ТОЛЬКО запросы,
+    # в которых есть хотя бы одна латинская буква (a–z / A–Z).
+    # Это защищает статистику от цифр, кириллицы и "мусорных" запросов.
+    if keyword and not re.search(r"[a-zA-Z]", keyword):
+        return templates.TemplateResponse(
+            "results.html",
+            {
+                "request": request,
+                "title": "Search by keyword",
+                "rows": [],
+                "page": 1,
+                "has_more": False,
+                "next_url": "",
+                "back_url": "/",
+            },
+        )
+
     offset = (page - 1) * PAGE_SIZE
 
     rows: list[dict] = []
