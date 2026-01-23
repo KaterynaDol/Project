@@ -3,13 +3,18 @@
 FastAPI web-приложение для поиска фильмов (MySQL) и статистики запросов (MongoDB).
 
 Функциональность:
-- Главная страница: выбор жанра + диапазон лет, поиск по ключевому слову
-- Результаты: пагинация по 10 фильмов
-- Статистика: Top 5 по частоте и Last 5 unique (берётся из MongoDB)
+- Главная страница: поиск по keyword + поиск по genre и диапазону лет
+- Результаты: пагинация (PAGE_SIZE)
+- Статистика: Top 5 по частоте и Last 5 unique (MongoDB)
 
 Логирование:
-- В MongoDB пишется 1 запись на 1 поиск (только при page == 1)
-- results_count = общее количество найденных фильмов по запросу (total_count)
+- 1 запись на 1 поиск (ТОЛЬКО при page == 1)
+- results_count = общее количество найденных фильмов (total_count)
+
+Защита от "дурака":
+- keyword: разрешаем логировать/искать только если есть хотя бы одна латинская буква
+- genre: проверяем, что жанр существует (или All)
+- years: проверяем порядок и границы (min_y..max_y)
 """
 
 from pathlib import Path
@@ -94,13 +99,13 @@ def index(request: Request):
 
 @app.get("/search/keyword", response_class=HTMLResponse)
 def search_keyword(request: Request, keyword: str = "", page: int = 1):
-    """Поиск по ключевому слову (title)."""
+    """
+    Поиск по ключевому слову (title).
+    Защита: keyword должен содержать хотя бы одну латинскую букву.
+    """
     keyword = keyword.strip()
 
-    # Валидация:
-    # Разрешаем логировать и обрабатывать ТОЛЬКО запросы,
-    # в которых есть хотя бы одна латинская буква (a–z / A–Z).
-    # Это защищает статистику от цифр, кириллицы и "мусорных" запросов.
+    # Анти-мусор: запрещаем цифры/кириллицу/пустое, чтобы не засорять статистику
     if keyword and not re.search(r"[a-zA-Z]", keyword):
         return templates.TemplateResponse(
             "results.html",
@@ -112,11 +117,11 @@ def search_keyword(request: Request, keyword: str = "", page: int = 1):
                 "has_more": False,
                 "next_url": "",
                 "back_url": "/",
+                "error": "Введите ключевое слово латиницей (a-z).",
             },
         )
 
     offset = (page - 1) * PAGE_SIZE
-
     rows: list[dict] = []
     has_more = False
 
@@ -125,14 +130,14 @@ def search_keyword(request: Request, keyword: str = "", page: int = 1):
 
         with get_mysql_connection() as conn:
             with conn.cursor() as cursor:
-                # 1) Достаём текущую страницу результатов
+                # 1) Текущая страница
                 cursor.execute(
                     queries.SEARCH_BY_KEYWORD,
-                    (like_value, PAGE_SIZE, offset),
+                    (like_value, PAGE_SIZE, offset)
                 )
                 rows = fetch_all(cursor)
 
-                # 2) Логируем только первый заход (page=1), пишем общее кол-во найденных фильмов
+                # 2) Логируем 1 раз на поиск: только page == 1, results_count = total_count
                 if page == 1:
                     cursor.execute(queries.COUNT_BY_KEYWORD, (like_value,))
                     total_count = int(cursor.fetchone()[0])
@@ -164,7 +169,7 @@ def search_genre(
 ):
     """
     Поиск по жанру и диапазону лет.
-    Если genre == "All" — используем запрос по всем жанрам в диапазоне лет.
+    Защита: жанр должен существовать (или All), годы должны быть в диапазоне базы.
     """
     genre = genre.strip()
     offset = (page - 1) * PAGE_SIZE
@@ -172,22 +177,74 @@ def search_genre(
     rows: list[dict] = []
     has_more = False
 
+    # Серверная валидация (защита от подмены URL)
+    valid_genres = ["All"] + get_genres()
+    min_y, max_y = get_min_max_year()
+
+    # 1) Проверка жанра
+    if genre and genre not in valid_genres:
+        return templates.TemplateResponse(
+            "results.html",
+            {
+                "request": request,
+                "title": "Search by genre & years",
+                "rows": [],
+                "page": 1,
+                "has_more": False,
+                "next_url": "",
+                "back_url": "/",
+                "error": "Неверный жанр. Выберите жанр из списка.",
+            },
+        )
+
+    # 2) Если жанр задан, но годы не заданы (0/0) - сообщаем об ошибке
+    if genre and (year_from <= 0 or not year_to <= 0):
+        return templates.TemplateResponse(
+            "results.html",
+            {
+                "request": request,
+                "title": "Search by genre & years",
+                "rows": [],
+                "page": 1,
+                "has_more": False,
+                "next_url": "",
+                "back_url": "/",
+                "error": "Укажите оба года: year_from и year_to.",
+            },
+        )
+
+    # 3) Проверка диапазона лет
+    if (year_from and year_to) and (year_from > year_to or year_from < min_y or year_to > max_y):
+        return templates.TemplateResponse(
+            "results.html",
+            {
+                "request": request,
+                "title": "Search by genre & years",
+                "rows": [],
+                "page": 1,
+                "has_more": False,
+                "next_url": "",
+                "back_url": "/",
+                "error": f"Неверный диапазон лет. Допустимо: {min_y}–{max_y}.",
+            },
+        )
+
     if genre and year_from and year_to:
         with get_mysql_connection() as conn:
             with conn.cursor() as cursor:
                 if genre == "All":
-                    # 1) Выборка текущей страницы (все жанры)
+                    # 1) Страница результатов
                     cursor.execute(
                         queries.SEARCH_BY_YEARS_ALL_GENRES,
                         (year_from, year_to, PAGE_SIZE, offset),
                     )
                     rows = fetch_all(cursor)
 
-                    # 2) Логируем один раз (page == 1) + считаем total_count
+                    # 2) Логируем 1 раз на поиск (page == 1) + total_count
                     if page == 1:
                         cursor.execute(
                             queries.COUNT_BY_YEARS_ALL_GENRES,
-                            (year_from, year_to),
+                            (year_from, year_to)
                         )
                         total_count = int(cursor.fetchone()[0])
                         log_query(
@@ -196,19 +253,18 @@ def search_genre(
                             total_count,
                         )
                 else:
-                    # 1) Выборка текущей страницы (конкретный жанр)
+                    # 1) Страница результатов
                     cursor.execute(
                         queries.SEARCH_BY_GENRE_YEARS,
                         (genre, year_from, year_to, PAGE_SIZE, offset),
                     )
                     rows = fetch_all(cursor)
 
-                    # 2) Логируем один раз (page == 1) + считаем total_count
+                    # 2) Логируем 1 раз на поиск (page == 1) + total_count
                     if page == 1:
-                        cursor.execute(
-                            queries.COUNT_BY_GENRE_YEARS,
-                            (genre, year_from, year_to),
-                        )
+                        cursor.execute(queries.COUNT_BY_GENRE_YEARS, (
+                            genre, year_from, year_to)
+                                       )
                         total_count = int(cursor.fetchone()[0])
                         log_query(
                             "genre__years_range",

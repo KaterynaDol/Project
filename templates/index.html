@@ -1,13 +1,16 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>Movies Search</title></head>
+<head>
+    <meta charset="utf-8">
+    <title>Movies Search</title>
+</head>
 <body>
     <h1>Movies Search (Sakila)</h1>
 
     <h2>Search by keyword</h2>
-    <form action="/search/keyword" method="get">
-    <input name="keyword" placeholder="academy" required>
-    <button type="submit">Search</button>
+        <form action="/search/keyword" method="get">
+        <input name="keyword" placeholder="academy" required>
+        <button type="submit">Search</button>
     </form>
 
     <h2>Search by genre & years</h2>
@@ -24,6 +27,10 @@
         <input name="year_to" type="number" min="{{ min_y }}" max="{{ max_y }}" value="{{ max_y }}" required>
 
         <button type="submit">Search</button>
+
+        <p style="font-size: 0.9em; color: #555; margin-top: 8px;">
+            Пожалуйста, укажите оба года в диапазоне {{ min_y }}–{{ max_y }}.
+        </p>
     </form>
 
     <p><a href="/stats">View statistics</a></p>

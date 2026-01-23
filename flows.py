@@ -9,7 +9,6 @@
 - просмотр статистики запросов
 """
 
-
 from Project import queries
 from Project.mysql_repo import (
     get_mysql_connection,

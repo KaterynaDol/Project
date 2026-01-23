@@ -4,6 +4,10 @@
 <body>
     <h1>{{ title }}</h1>
 
+    {% if error %}
+        <p style="color: red;"><b>{{ error }}</b></p>
+    {% endif %}
+
     {% if rows %}
         <ul>
             {% for r in rows %}
