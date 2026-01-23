@@ -14,7 +14,7 @@ FastAPI web-приложение для поиска фильмов (MySQL) и �
 Защита от "дурака":
 - keyword: разрешаем логировать/искать только если есть хотя бы одна латинская буква
 - genre: проверяем, что жанр существует (или All)
-- years: проверяем порядок и границы (min_y..max_y)
+- years: проверяем, что переданы оба года, порядок и границы (min_y..max_y)
 """
 
 from pathlib import Path
@@ -197,8 +197,8 @@ def search_genre(
             },
         )
 
-    # 2) Если жанр задан, но годы не заданы (0/0) - сообщаем об ошибке
-    if genre and (year_from <= 0 or not year_to <= 0):
+    # 2) Проверка, что оба года реально пришли (если год не пришёл — будет 0)
+    if genre and (year_from <= 0 or year_to <= 0):
         return templates.TemplateResponse(
             "results.html",
             {
@@ -213,22 +213,28 @@ def search_genre(
             },
         )
 
-    # 3) Проверка диапазона лет
-    if (year_from and year_to) and (year_from > year_to or year_from < min_y or year_to > max_y):
-        return templates.TemplateResponse(
-            "results.html",
-            {
-                "request": request,
-                "title": "Search by genre & years",
-                "rows": [],
-                "page": 1,
-                "has_more": False,
-                "next_url": "",
-                "back_url": "/",
-                "error": f"Неверный диапазон лет. Допустимо: {min_y}–{max_y}.",
-            },
-        )
+    # 3) Если пользователь ввёл наоборот — исправляем порядок
+    if year_from and year_to and year_from > year_to:
+        year_from, year_to = year_to, year_from
 
+    # 4) Проверка диапазона лет
+    if year_from and year_to:
+        if year_from < min_y or year_to > max_y:
+            return templates.TemplateResponse(
+                "results.html",
+                {
+                    "request": request,
+                    "title": "Search by genre & years",
+                    "rows": [],
+                    "page": 1,
+                    "has_more": False,
+                    "next_url": "",
+                    "back_url": "/",
+                    "error": f"Неверный диапазон лет. Допустимо: {min_y}–{max_y}.",
+                },
+            )
+
+    # 5) Основной поиск
     if genre and year_from and year_to:
         with get_mysql_connection() as conn:
             with conn.cursor() as cursor:
